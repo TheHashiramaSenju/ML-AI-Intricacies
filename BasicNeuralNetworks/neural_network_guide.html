@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Neural Networks: From MNIST to Training</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,600;0,700;1,300&display=swap');
+
+  :root {
+    --bg: #0d0f14;
+    --surface: #141720;
+    --surface2: #1c2030;
+    --border: #2a2f42;
+    --accent: #4f8ef7;
+    --accent2: #e87b3e;
+    --accent3: #6ec98f;
+    --accent4: #d868d8;
+    --text: #dde1ef;
+    --text-muted: #8892aa;
+    --warn: #f5c842;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'IBM Plex Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.75;
+    font-size: 15px;
+  }
+
+  .page {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 60px 32px 100px;
+  }
+
+  /* Header */
+  .doc-header {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 36px;
+    margin-bottom: 56px;
+  }
+  .doc-header .label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .doc-header h1 {
+    font-size: 2.2rem;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 16px;
+    color: #fff;
+  }
+  .doc-header p {
+    color: var(--text-muted);
+    font-size: 15px;
+    max-width: 620px;
+    font-weight: 300;
+  }
+
+  /* Table of Contents */
+  .toc {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 24px 28px;
+    margin-bottom: 64px;
+  }
+  .toc h3 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 14px;
+  }
+  .toc ol {
+    padding-left: 18px;
+  }
+  .toc li {
+    margin-bottom: 6px;
+    font-size: 14px;
+  }
+  .toc a {
+    color: var(--accent);
+    text-decoration: none;
+    opacity: 0.85;
+  }
+  .toc a:hover { opacity: 1; }
+
+  /* Sections */
+  .section {
+    margin-bottom: 72px;
+  }
+  .section-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .section h2 {
+    font-size: 1.55rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .section h3 {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--warn);
+    margin: 28px 0 10px;
+  }
+  .section h4 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--accent3);
+    margin: 20px 0 6px;
+    font-family: 'IBM Plex Mono', monospace;
+    letter-spacing: 0.04em;
+  }
+  p { margin-bottom: 14px; color: var(--text); }
+
+  /* Key distinction boxes */
+  .distinction {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 24px 0;
+  }
+  .distinction-item {
+    background: var(--surface2);
+    border-radius: 8px;
+    padding: 18px 20px;
+    border-top: 3px solid var(--border);
+  }
+  .distinction-item.a { border-top-color: var(--accent); }
+  .distinction-item.b { border-top-color: var(--accent2); }
+  .distinction-item.c { border-top-color: var(--accent3); }
+  .distinction-item.d { border-top-color: var(--accent4); }
+  .distinction-item .title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+  .distinction-item.a .title { color: var(--accent); }
+  .distinction-item.b .title { color: var(--accent2); }
+  .distinction-item.c .title { color: var(--accent3); }
+  .distinction-item.d .title { color: var(--accent4); }
+  .distinction-item p { font-size: 13.5px; margin: 0; color: var(--text); }
+
+  /* Callout / insight box */
+  .callout {
+    border-left: 3px solid var(--accent);
+    background: rgba(79,142,247,0.08);
+    padding: 16px 20px;
+    border-radius: 0 6px 6px 0;
+    margin: 20px 0;
+  }
+  .callout.warn {
+    border-left-color: var(--warn);
+    background: rgba(245,200,66,0.07);
+  }
+  .callout.green {
+    border-left-color: var(--accent3);
+    background: rgba(110,201,143,0.07);
+  }
+  .callout.orange {
+    border-left-color: var(--accent2);
+    background: rgba(232,123,62,0.08);
+  }
+  .callout p { margin: 0; font-size: 14px; }
+  .callout strong { color: #fff; }
+
+  /* Code block */
+  .code-block {
+    background: #0a0c10;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 18px 20px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    line-height: 1.7;
+    overflow-x: auto;
+    margin: 16px 0;
+    white-space: pre;
+    color: #b8c4e0;
+  }
+  .code-block .cm { color: #6272a4; }
+  .code-block .kw { color: var(--accent); }
+  .code-block .fn { color: var(--accent3); }
+  .code-block .st { color: var(--accent2); }
+  .code-block .nm { color: var(--warn); }
+
+  /* Math formula */
+  .formula {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px 20px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 14px;
+    text-align: center;
+    margin: 20px 0;
+    color: var(--warn);
+    letter-spacing: 0.04em;
+  }
+  .formula .label { font-size: 11px; color: var(--text-muted); display: block; margin-top: 6px; font-family: 'IBM Plex Sans', sans-serif; letter-spacing: 0; }
+
+  /* Step flow */
+  .step-flow {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin: 24px 0;
+    position: relative;
+  }
+  .step {
+    display: flex;
+    gap: 18px;
+    position: relative;
+  }
+  .step-line {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-shrink: 0;
+  }
+  .step-num {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .step-num.orange { background: var(--accent2); }
+  .step-num.green { background: var(--accent3); color: #0d0f14; }
+  .step-num.purple { background: var(--accent4); }
+  .step-num.yellow { background: var(--warn); color: #0d0f14; }
+  .step-connector {
+    width: 2px;
+    flex: 1;
+    background: var(--border);
+    min-height: 20px;
+  }
+  .step-body {
+    padding-bottom: 28px;
+    flex: 1;
+  }
+  .step-body h4 {
+    margin-top: 4px;
+    margin-bottom: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #fff;
+    font-family: 'IBM Plex Sans', sans-serif;
+    letter-spacing: 0;
+  }
+  .step-body p { font-size: 14px; margin-bottom: 8px; }
+
+  /* Comparison table */
+  .compare-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    font-size: 13.5px;
+  }
+  .compare-table th {
+    background: var(--surface2);
+    padding: 12px 16px;
+    text-align: left;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+  }
+  .compare-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  .compare-table tr:hover td { background: rgba(255,255,255,0.02); }
+  .compare-table td:first-child {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+
+  /* Pixel grid visual */
+  .pixel-grid {
+    display: inline-grid;
+    grid-template-columns: repeat(7, 14px);
+    gap: 2px;
+    margin: 16px 0;
+  }
+  .pixel {
+    width: 14px;
+    height: 14px;
+    border-radius: 2px;
+  }
+
+  /* Arrow between concepts */
+  .arrow-flow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin: 20px 0;
+  }
+  .arrow-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 14px;
+    font-size: 12.5px;
+    font-family: 'IBM Plex Mono', monospace;
+    white-space: nowrap;
+  }
+  .arrow-box.blue { border-color: var(--accent); color: var(--accent); }
+  .arrow-box.orange { border-color: var(--accent2); color: var(--accent2); }
+  .arrow-box.green { border-color: var(--accent3); color: var(--accent3); }
+  .arrow-box.purple { border-color: var(--accent4); color: var(--accent4); }
+  .arrow-box.yellow { border-color: var(--warn); color: var(--warn); }
+  .arrow { color: var(--text-muted); font-size: 18px; }
+
+  /* Sign demonstration */
+  .sign-demo {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin: 20px 0;
+  }
+  .sign-box {
+    background: var(--surface2);
+    border-radius: 8px;
+    padding: 18px;
+  }
+  .sign-box .sign-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .sign-box.pos .sign-label { color: #e05f5f; }
+  .sign-box.neg .sign-label { color: var(--accent3); }
+  .sign-box p { font-size: 13px; margin: 0; }
+  .sign-box .math { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--warn); margin-top: 8px; }
+
+  /* Inline code */
+  code {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12.5px;
+    background: var(--surface2);
+    padding: 1px 6px;
+    border-radius: 3px;
+    color: var(--accent3);
+    border: 1px solid var(--border);
+  }
+
+  /* Section divider */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 60px 0;
+  }
+
+  /* Confusion buster */
+  .confusion-buster {
+    background: linear-gradient(135deg, rgba(79,142,247,0.06), rgba(216,104,216,0.06));
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px 28px;
+    margin: 28px 0;
+  }
+  .confusion-buster .cb-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent4);
+    margin-bottom: 14px;
+  }
+  .confusion-buster ul {
+    padding-left: 18px;
+  }
+  .confusion-buster li {
+    margin-bottom: 10px;
+    font-size: 13.5px;
+    color: var(--text);
+  }
+  .confusion-buster strong { color: var(--warn); }
+
+  ul, ol { padding-left: 20px; margin-bottom: 14px; }
+  li { margin-bottom: 6px; font-size: 14px; }
+
+  @media (max-width: 600px) {
+    .distinction { grid-template-columns: 1fr; }
+    .sign-demo { grid-template-columns: 1fr; }
+    .page { padding: 36px 18px 80px; }
+    .doc-header h1 { font-size: 1.6rem; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <div class="doc-header">
+    <div class="label">Complete Learning Guide</div>
+    <h1>Neural Networks: From Pixels to Training</h1>
+    <p>Everything that was jumbled up — structured from scratch, step by step. Built around the MNIST digit example so every concept is anchored in something real.</p>
+  </div>
+
+  <!-- TOC -->
+  <div class="toc">
+    <h3>What's inside</h3>
+    <ol>
+      <li><a href="#mnist">MNIST: What are we actually trying to do?</a></li>
+      <li><a href="#input">The Input: Turning a digit image into numbers</a></li>
+      <li><a href="#weights">Weights: The network's guessing machine</a></li>
+      <li><a href="#forward">The Forward Pass: Making a prediction</a></li>
+      <li><a href="#loss">The Loss Function: Measuring how wrong we are</a></li>
+      <li><a href="#backprop">Backpropagation: Finding who is to blame (no if statements)</a></li>
+      <li><a href="#optimizer">The Optimizer: Actually taking the step</a></li>
+      <li><a href="#lr">The Learning Rate: Exactly where it lives in the math</a></li>
+      <li><a href="#one-step">One Complete Training Step: The full movie</a></li>
+      <li><a href="#batching">Batching: Why the network doesn't memorize one image</a></li>
+      <li><a href="#epochs">Epochs vs. Steps — what these words actually mean</a></li>
+      <li><a href="#callbacks">Callbacks: What they are and what they are not</a></li>
+      <li><a href="#warmup">The WarmupScheduler line-by-line</a></li>
+      <li><a href="#setvalue">tf.keras.backend.set_value — what exactly gets changed</a></li>
+      <li><a href="#confusion">Master confusion-buster table</a></li>
+    </ol>
+  </div>
+
+  <!-- ═══════════════════════════ 1. MNIST ═══════════════════════════ -->
+  <div class="section" id="mnist">
+    <div class="section-label">Chapter 1</div>
+    <h2>MNIST — What Are We Actually Trying to Do?</h2>
+
+    <p>MNIST is a dataset of 70,000 handwritten digits — images of people writing 0 through 9 on paper. Each image is 28×28 pixels, and it's grayscale (no color, just brightness).</p>
+
+    <p><strong>The task is simple to state:</strong> Given a 28×28 image of a handwritten digit, tell me which digit it is (0–9).</p>
+
+    <p>This is called <strong>classification</strong> — the network has to pick one category out of 10 possible options. There is no formula for this. A human just "sees" it. We are trying to teach a network to do the same, purely through math.</p>
+
+    <div class="callout green">
+      <p><strong>Why MNIST?</strong> Because everything that happens in a billion-parameter language model also happens here — the math is identical, just much smaller. If you understand MNIST, you understand the core loop of all neural network training.</p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════ 2. INPUT ═══════════════════════════ -->
+  <div class="section" id="input">
+    <div class="section-label">Chapter 2</div>
+    <h2>The Input — Turning a Digit Image Into Numbers</h2>
+
+    <p>A computer cannot "see" an image the way you do. To feed an image into a neural network, every pixel becomes a number between 0 and 255:</p>
+    <ul>
+      <li><strong>0</strong> = pure black (no ink)</li>
+      <li><strong>255</strong> = pure white (full ink)</li>
+      <li>Anything in between = a shade of grey</li>
+    </ul>
+
+    <p>A 28×28 image = <strong>784 pixels</strong>. Those 784 numbers sit in a grid. The network cannot process a grid directly, so we <em>flatten</em> it — we unroll the grid row by row into a single list of 784 numbers.</p>
+
+    <div class="code-block"><span class="cm"># What the "7" image actually looks like to the network</span>
+[  0,   0,   0,  12, 255, 230,   4,   0,  0, ...  ]
+ ^                  ^               ^
+pixel 1           pixel 5        pixel 7
+(black)          (bright)       (grey)
+<span class="cm"># Total: 784 numbers in one flat list called the input vector X</span></div>
+
+    <p>This flat list of 784 numbers is called the <strong>input vector X</strong>. It is the raw material that enters the network. Nothing else goes in at the start.</p>
+  </div>
+
+  <!-- ═══════════════════════════ 3. WEIGHTS ═══════════════════════════ -->
+  <div class="section" id="weights">
+    <div class="section-label">Chapter 3</div>
+    <h2>Weights — The Network's Guessing Machine</h2>
+
+    <p>A neural network is made of <strong>layers</strong>. Each layer is full of <strong>neurons</strong>. Each connection between neurons has a <strong>weight</strong> — just a number, like <code>0.43</code> or <code>-1.2</code>.</p>
+
+    <p>At the very beginning of training, every weight is set to a small random number. The network knows nothing. It's a random guessing machine. Training is the process of slowly adjusting those weights until the guesses become correct.</p>
+
+    <h3>What do weights actually do?</h3>
+    <p>Each weight is a multiplier. When an input number passes through a connection, it gets multiplied by that connection's weight.</p>
+
+    <div class="code-block"><span class="cm"># Simplest possible example — one neuron, two inputs</span>
+pixel_brightness_1 = 200
+pixel_brightness_2 = 50
+
+weight_1 = 0.7    <span class="cm"># this weight says "pixel 1 is important"</span>
+weight_2 = -0.3   <span class="cm"># this weight says "pixel 2 hurts the score"</span>
+bias = 0.1        <span class="cm"># an extra adjustable number (ignore for now)</span>
+
+output = (200 × 0.7) + (50 × -0.3) + 0.1
+       = 140 + (-15) + 0.1
+       = 125.1</div>
+
+    <p>That's it. The network is essentially a massive, stacked version of this simple multiplication. The "intelligence" lives entirely in the values of the weights.</p>
+
+    <div class="callout">
+      <p><strong>Training = finding the right values for all the weights.</strong> That is the only goal of the entire training process. Every other concept (loss, backprop, optimizer, learning rate) is in service of answering: "Which direction should each weight move, and by how much?"</p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════ 4. FORWARD PASS ═══════════════════════════ -->
+  <div class="section" id="forward">
+    <div class="section-label">Chapter 4</div>
+    <h2>The Forward Pass — Making a Prediction</h2>
+
+    <p>The "forward pass" is the journey of data from input to prediction. Data flows <em>forward</em> through layers, one after another. Nothing learns yet. This is just the network making its current guess based on whatever weights it has right now.</p>
+
+    <div class="step-flow">
+      <div class="step">
+        <div class="step-line">
+          <div class="step-num">1</div>
+          <div class="step-connector"></div>
+        </div>
+        <div class="step-body">
+          <h4>Input Layer</h4>
+          <p>The 784 pixel values enter. No math happens here. It's just a holding place for the input.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-line">
+          <div class="step-num orange">2</div>
+          <div class="step-connector"></div>
+        </div>
+        <div class="step-body">
+          <h4>Hidden Layers (Weighted multiply + Activation)</h4>
+          <p>Every number from the previous layer gets multiplied by its weight and summed up. Then an <strong>activation function</strong> fires on the result.</p>
+          <p><strong>Why an activation function?</strong> Because pure multiplication and addition is a straight line mathematically. If all you do is multiply and add, any 10-layer network collapses to the same thing as a 1-layer network — just a different multiplier. The activation function breaks linearity so the network can learn curved patterns, complex shapes, faces, etc.</p>
+          <p>The most common activation function is <strong>ReLU</strong>: if the number is negative, make it zero. If it's positive, leave it alone. That's the entire function. Simple but powerful.</p>
+          <div class="code-block">ReLU(x) = max(0, x)
+
+ReLU(125.1)  = 125.1   ← positive, unchanged
+ReLU(-38.4)  = 0       ← negative, killed off</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-line">
+          <div class="step-num green">3</div>
+          <div class="step-connector"></div>
+        </div>
+        <div class="step-body">
+          <h4>Output Layer (10 neurons for 10 digits)</h4>
+          <p>The final layer has exactly 10 neurons — one for each digit class (0 through 9). After the weighted multiplication, each neuron holds a raw score called a <strong>logit</strong>.</p>
+          <div class="code-block">Raw scores (logits) coming out of the 10 neurons:
+digit 0: -2.1
+digit 1: -0.4
+digit 2:  0.8
+digit 3: -1.3
+digit 4: -0.9
+digit 5:  0.2
+digit 6: -0.7
+digit 7:  3.6   ← highest score
+digit 8:  0.1
+digit 9: -1.8</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-line">
+          <div class="step-num purple">4</div>
+        </div>
+        <div class="step-body">
+          <h4>Softmax — Turning raw scores into probabilities</h4>
+          <p>These logits are just raw numbers. They could be anything. We need them to look like probabilities that sum to 100% so we can say "I am X% confident this is a 7."</p>
+          <p><strong>Softmax</strong> does this. It takes all 10 raw scores and converts them into 10 probabilities that add up to 1.0 (100%). It amplifies large scores and shrinks small ones.</p>
+          <div class="code-block">After Softmax:
+digit 7: 0.85  (85% confident)
+digit 2: 0.07  (7%)
+digit 5: 0.04  (4%)
+... others: small values
+<span class="cm"># These sum to 1.0 exactly</span></div>
+          <p>The network's prediction is the digit with the highest probability. In this case: <strong>7</strong>. Forward pass done.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <p><strong>Important:</strong> The forward pass does zero learning. The weights are untouched. This is purely the network computing its current guess. Learning only happens <em>after</em> we measure how wrong the guess was.</p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════ 5. LOSS ═══════════════════════════ -->
+  <div class="section" id="loss">
+    <div class="section-label">Chapter 5</div>
+    <h2>The Loss Function — Measuring How Wrong We Are</h2>
+
+    <h3>Loss Function vs. Cost Function (the real difference)</h3>
+    <p>These two terms sound the same but they operate at different scales:</p>
+
+    <div class="distinction">
+      <div class="distinction-item a">
+        <div class="title">Loss Function</div>
+        <p>Measures the error for <strong>one single example</strong> — one image. "How wrong was the network on <em>this specific</em> handwritten 7?"</p>
+      </div>
+      <div class="distinction-item b">
+        <div class="title">Cost Function</div>
+        <p>The <strong>average</strong> of the loss across a batch or the whole dataset. "How wrong is the network on <em>average</em> across these 32 images?"</p>
+      </div>
+    </div>
+
+    <p>In practice, people use both words interchangeably. But the precise distinction: loss = one example, cost = averaged batch.</p>
+
+    <h3>What does the loss function actually compute for MNIST?</h3>
+    <p>For classification (like MNIST), the loss function used is called <strong>Categorical Cross-Entropy</strong>. Here's the intuition without calculus:</p>
+
+    <p>The true label for a "7" image is represented as: <code>[0, 0, 0, 0, 0, 0, 0, 1, 0, 0]</code> — 100% on digit 7, zero on everything else. This is called a <strong>one-hot vector</strong>.</p>
+
+    <p>The network predicted: <code>[0, 0, 0.07, 0, 0, 0.04, 0, 0.85, 0.01, 0]</code></p>
+
+    <p>Cross-Entropy compares these two vectors. If the predicted probability for the correct class (7) is close to 1.0, the loss is very small (near zero). If the predicted probability is far from 1.0, the loss is very large.</p>
+
+    <div class="formula">
+      Loss = -log(probability given to correct class)<br>
+      Loss = -log(0.85) = 0.163 &nbsp;← small loss, good prediction
+      <span class="label">If the network had only given 0.1 probability to "7": Loss = -log(0.1) = 2.30 ← huge loss</span>
+    </div>
+
+    <p>The loss is always a single number. It represents the total "wrongness" of this one prediction. The bigger the number, the worse the prediction.</p>
+
+    <h3>What other loss functions exist?</h3>
+    <ul>
+      <li><strong>Mean Squared Error (MSE)</strong> — used for regression (predicting a continuous number like a house price). Computes the squared difference between prediction and truth.</li>
+      <li><strong>Binary Cross-Entropy</strong> — for yes/no problems (spam or not spam).</li>
+      <li><strong>Categorical Cross-Entropy</strong> — for multi-class problems like MNIST (10 classes).</li>
+    </ul>
+
+    <div class="callout">
+      <p><strong>The loss function's only job is to output a single number that is smaller when the network is right and larger when it is wrong.</strong> That number is the starting point for backpropagation.</p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════ 6. BACKPROP ═══════════════════════════ -->
+  <div class="section" id="backprop">
+    <div class="section-label">Chapter 6</div>
+    <h2>Backpropagation — Finding Who Is to Blame (No If Statements)</h2>
+
+    <p>We have a loss number, say <strong>2.3</strong> — the network was very wrong. But the network has thousands of weights. Which weights caused this mistake? How much is each one to blame? That's what backpropagation figures out.</p>
+
+    <h3>What backprop actually computes</h3>
+    <p>For every single weight in the entire network, backprop calculates one number called the <strong>gradient</strong>. The gradient answers this question:</p>
+
+    <div class="callout green">
+      <p><strong>"If I increase this weight by a tiny bit, does the loss go up or go down, and by how much?"</strong></p>
+    </div>
+
+    <p>That's it. The gradient for a weight is the sensitivity of the loss to that weight. Nothing more.</p>
+
+    <h3>How does it know which direction — without if statements?</h3>
+    <p>This was your exact doubt. No, there are no if statements. The direction comes purely from the <strong>sign (+ or −)</strong> of the gradient number itself:</p>
+
+    <div class="sign-demo">
+      <div class="sign-box pos">
+        <div class="sign-label">Gradient = +5.2 (Positive)</div>
+        <p>Increasing this weight increases the loss. The weight is making things worse by being too large.</p>
+        <div class="math">→ We should DECREASE this weight</div>
+      </div>
+      <div class="sign-box neg">
+        <div class="sign-label">Gradient = −3.1 (Negative)</div>
+        <p>Increasing this weight decreases the loss. The weight is too small and moving it up helps.</p>
+        <div class="math">→ We should INCREASE this weight</div>
+      </div>
+    </div>
+
+    <p>The math takes care of the "decision" automatically. There is no code branching. The sign of the gradient tells the optimizer which way to move, implicitly.</p>
+
+    <h3>How does it compute this for every weight? The Chain Rule.</h3>
+    <p>The loss depends on the output, which depended on the last layer, which depended on the layer before, all the way back. The Chain Rule from calculus lets you trace this dependency backward — hence <em>back</em>propagation.</p>
+
+    <p>Imagine the network like a row of dominoes. The final domino is the loss. To find out how much "pushing" an early domino (weight) caused the final one to fall, you multiply the individual contributions at each step backward. That multiplication chain is the Chain Rule.</p>
+
+    <div class="callout warn">
+      <p><strong>What backprop does NOT do:</strong> It does not change any weight. It only computes and stores gradients. Every weight stays exactly the same until the optimizer runs next.</p>
+    </div>
+
+    <h3>After backprop runs</h3>
+    <p>Every weight in the network now has a gradient attached to it — a small number that says "move up" or "move down" and "by this sensitivity amount." The network is now ready for the optimizer.</p>
+  </div>
+
+  <!-- ═══════════════════════════ 7. OPTIMIZER ═══════════════════════════ -->
+  <div class="section" id="optimizer">
+    <div class="section-label">Chapter 7</div>
+    <h2>The Optimizer — Actually Taking the Step</h2>
+
+    <p>Backprop gave us gradients. The optimizer uses those gradients to actually update the weights. This is where learning physically happens — the weights change.</p>
+
+    <h3>The simplest optimizer: SGD (Stochastic Gradient Descent)</h3>
+    <p>Take every weight, take its gradient, and update:</p>
+
+    <div class="formula">
+      w_new = w_old − (learning_rate × gradient)
+      <span class="label">This is the entire update rule for SGD. Everything else is a variation of this.</span>
+    </div>
+
+    <p>Let's trace one real example:</p>
+    <div class="code-block">weight = 0.7
+gradient = +5.2     <span class="cm"># backprop told us: increasing this weight = bigger loss</span>
+learning_rate = 0.01
+
+w_new = 0.7 − (0.01 × 5.2)
+w_new = 0.7 − 0.052
+w_new = 0.648       <span class="cm"># weight moved DOWN, because gradient was positive</span></div>
+
+    <p>The weight moved from <code>0.7</code> to <code>0.648</code>. The gradient was positive so the subtraction pulled it down. The "decision" to go down was never coded — it emerged from the minus sign in the formula.</p>
+
+    <h3>What about Adam?</h3>
+    <p>Adam is the most commonly used optimizer. It's an enhancement over SGD. The core idea is the same — move weights using gradients — but Adam does two extra things:</p>
+    <ul>
+      <li><strong>Momentum:</strong> Adam remembers the direction of recent steps and builds up speed if weights keep going the same way (like a ball rolling downhill). This helps escape flat areas.</li>
+      <li><strong>Adaptive learning rates per weight:</strong> Weights that keep changing get a smaller effective step. Weights that rarely change get a larger step. This is self-tuning.</li>
+    </ul>
+
+    <div class="confusion-buster">
+      <div class="cb-title">Backprop vs Optimizer — The Critical Distinction</div>
+      <ul>
+        <li><strong>Backpropagation</strong> = scout. It goes through the whole network and maps the terrain. It computes gradients for every weight. It changes nothing.</li>
+        <li><strong>Optimizer</strong> = the walker. It takes that map (gradients) and physically moves (updates weights). Backprop tells it where "down" is; the optimizer actually steps.</li>
+        <li>They are two different systems running one after another every training step. In code, <code>loss.backward()</code> is backprop. <code>optimizer.step()</code> is the optimizer. These are two separate function calls.</li>
+        <li>Changing the optimizer (Adam vs SGD) does not change backprop. Backprop always computes the same gradients — only what you do with them changes.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════ 8. LEARNING RATE ═══════════════════════════ -->
+  <div class="section" id="lr">
+    <div class="section-label">Chapter 8</div>
+    <h2>The Learning Rate — Exactly Where It Lives in the Math</h2>
+
+    <p>The learning rate is the single multiplier in the optimizer's update formula:</p>
+
+    <div class="formula">
+      w_new = w_old − (<span style="color:var(--accent)">learning_rate</span> × gradient)
+      <span class="label">The learning rate only appears here — inside the optimizer, as a multiplier on the gradient.</span>
+    </div>
+
+    <p>It does not appear anywhere in the forward pass. It does not appear in the loss function. It does not appear in backpropagation. It lives exclusively inside the optimizer's weight-update step.</p>
+
+    <h3>Why does it matter so much?</h3>
+    <p>If the learning rate is <strong>too large</strong>: each step overshoots the minimum. The weights bounce around wildly and the loss never settles. This is called divergence.</p>
+    <p>If the learning rate is <strong>too small</strong>: each step is microscopic. Training will eventually work but it takes forever. You might also get stuck in bad local regions.</p>
+    <p>If the learning rate is <strong>just right</strong>: training converges smoothly and quickly.</p>
+
+    <div class="callout">
+      <p><strong>The learning rate is a hyperparameter</strong> — you set it before training. Unlike weights, the learning rate is not learned by the network automatically. That's why schedulers (like your WarmupScheduler) exist — to manage it manually.</p>
+    </div>
+
+    <h3>What is the learning rate in TensorFlow/Keras technically?</h3>
+    <p>It is not a regular Python float like <code>0.001</code>. It is stored as a <code>tf.Variable</code> — a named piece of memory in the computational graph, accessible on GPU or CPU. This distinction matters for the next chapter.</p>
+  </div>
+
+  <!-- ═══════════════════════════ 9. ONE STEP ═══════════════════════════ -->
+  <div class="section" id="one-step">
+    <div class="section-label">Chapter 9</div>
+    <h2>One Complete Training Step — The Full Movie</h2>
+
+    <p>Now that every piece is defined, here is one complete training step from start to finish. This is what happens for a single batch of images:</p>
+
+    <div class="step-flow">
+      <div class="step">
+        <div class="step-line">
+          <div class="step-num">1</div>
+          <div class="step-connector"></div>
+        </div>
+        <div class="step-body">
+          <h4>Forward Pass</h4>
+          <p>Feed the batch of images through all the layers. Each layer does: (input × weights) + bias, then activation function. The final layer runs Softmax and produces probabilities for each digit class.</p>
+          <p><em>Weights are read-only here. Nothing changes yet.</em></p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-line">
+          <div class="step-num orange">2</div>
+          <div class="step-connector"></div>
+        </div>
+        <div class="step-body">
+          <h4>Loss Calculation</h4>
+          <p>Compare the predicted probabilities to the true labels using Cross-Entropy. Get a single scalar number (the loss). This number measures total wrongness for this batch.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-line">
+          <div class="step-num yellow">3</div>
+          <div class="step-connector"></div>
+        </div>
+        <div class="step-body">
+          <h4>Backpropagation</h4>
+          <p>Starting from the loss, apply the Chain Rule backward through all layers. For every weight in the entire network, compute and store its gradient. Nothing changes yet — just gradients are computed and attached.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-line">
+          <div class="step-num green">4</div>
+          <div class="step-connector"></div>
+        </div>
+        <div class="step-body">
+          <h4>Optimizer Step</h4>
+          <p>The optimizer reads every weight's gradient. It applies: <code>w = w − (lr × gradient)</code>. Every single weight in the network gets updated by a tiny amount. <strong>This is the actual moment of learning.</strong></p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-line">
+          <div class="step-num purple">5</div>
+        </div>
+        <div class="step-body">
+          <h4>Zero the Gradients</h4>
+          <p>Gradients are wiped clean (zeroed out). If we don't do this, the next batch's gradients would stack on top of the old ones and corrupt the update. Ready for the next batch.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow-flow">
+      <div class="arrow-box blue">Input</div>
+      <div class="arrow">→</div>
+      <div class="arrow-box orange">Forward Pass</div>
+      <div class="arrow">→</div>
+      <div class="arrow-box green">Loss</div>
+      <div class="arrow">→</div>
+      <div class="arrow-box yellow">Backprop</div>
+      <div class="arrow">→</div>
+      <div class="arrow-box purple">Optimizer</div>
+      <div class="arrow">→</div>
+      <div class="arrow-box blue">Weights Updated</div>
+    </div>
+
+    <p>This entire loop repeats for every batch. After all batches in the dataset have been seen once, that's one <strong>epoch</strong>.</p>
+  </div>
+
+  <!-- ═══════════════════════════ 10. BATCHING ═══════════════════════════ -->
+  <div class="section" id="batching">
+    <div class="section-label">Chapter 10</div>
+    <h2>Batching — Why the Network Doesn't Memorize One Image</h2>
+
+    <p>You asked: "If we find an error and nudge the weights to fix it, won't the network just memorize that one image?"</p>
+
+    <p>Yes — if we trained on one image at a time and took big steps, that's exactly what would happen. We prevent it in two ways:</p>
+
+    <h3>Defense 1: We train on a batch of images simultaneously</h3>
+    <p>A batch is typically 32, 64, or 128 images processed together before any weight update happens.</p>
+    <p>Here's what this means for the weight update: Backprop runs separately for each of the 32 images in the batch. Each image produces its own gradient for every weight. Then, before the optimizer runs, we <strong>average all 32 gradients together</strong> into one single gradient per weight.</p>
+
+    <div class="code-block"><span class="cm"># Weight #402 (responsible for detecting a vertical stroke)</span>
+Gradient from image 1 (seven):   +2.1  <span class="cm"># says "move down"</span>
+Gradient from image 2 (one):     -0.8  <span class="cm"># says "move up"</span>
+Gradient from image 3 (seven):   +1.9  <span class="cm"># says "move down"</span>
+Gradient from image 4 (two):     +0.3  <span class="cm"># says "move down slightly"</span>
+...
+
+Average gradient = (2.1 - 0.8 + 1.9 + 0.3 + ...) / 32 = +0.9
+
+<span class="cm"># The weight moves in the direction that helps the MAJORITY</span>
+<span class="cm"># No single image hijacks the update</span></div>
+
+    <p>The average means no single weird or extreme image can dominate. The update reflects the general consensus across 32 different examples. This is why batching prevents immediate overfitting.</p>
+
+    <h3>Defense 2: The learning rate keeps each step tiny</h3>
+    <p>Even if the batch agreed strongly on a direction, the learning rate multiplies that by 0.001 or 0.0001. The step is so small that even if one batch was unusual, the damage is minor and the next batch will correct it.</p>
+
+    <div class="callout orange">
+      <p><strong>Overfitting comes later</strong> — not immediately — and it happens when the model trains for too many epochs on too small a dataset. That's what ReduceLROnPlateau and EarlyStopping are protecting against.</p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════ 11. EPOCHS ═══════════════════════════ -->
+  <div class="section" id="epochs">
+    <div class="section-label">Chapter 11</div>
+    <h2>Epochs vs. Steps — What These Words Actually Mean</h2>
+
+    <div class="distinction">
+      <div class="distinction-item a">
+        <div class="title">Step (or Iteration)</div>
+        <p>One forward pass + backprop + optimizer update. Done for one batch. If dataset = 10,000 images and batch size = 32, there are ~312 steps per epoch.</p>
+      </div>
+      <div class="distinction-item b">
+        <div class="title">Epoch</div>
+        <p>One complete pass through the entire dataset. All 312 batches processed. All weights updated 312 times. After one epoch, every image has been seen once.</p>
+      </div>
+      <div class="distinction-item c">
+        <div class="title">Learning Rate</div>
+        <p>How big each step is. Measured per step (or per epoch if a scheduler changes it once per epoch).</p>
+      </div>
+      <div class="distinction-item d">
+        <div class="title">Training Run</div>
+        <p>Multiple epochs. If you train for 50 epochs, every image gets seen 50 times, each time with slightly improved weights.</p>
+      </div>
+    </div>
+
+    <p>Callbacks in Keras can fire at different granularities: <code>on_train_begin</code>, <code>on_epoch_begin</code>, <code>on_batch_begin</code>, <code>on_batch_end</code>, <code>on_epoch_end</code>, <code>on_train_end</code>. Your WarmupScheduler uses <code>on_epoch_begin</code> — it fires once at the start of each epoch.</p>
+  </div>
+
+  <!-- ═══════════════════════════ 12. CALLBACKS ═══════════════════════════ -->
+  <div class="section" id="callbacks">
+    <div class="section-label">Chapter 12</div>
+    <h2>Callbacks — What They Are and What They Are Not</h2>
+
+    <p><code>model.fit()</code> is the engine. It runs the training loop — forward pass, loss, backprop, optimizer, repeat. It handles everything about the actual training math.</p>
+
+    <p><strong>Callbacks are not part of the training math.</strong> They are event listeners that get to run code at specific points in the training loop — but they cannot replace or intercept the core loop.</p>
+
+    <p>Think of <code>model.fit()</code> as a highway with rest stops at predictable points:</p>
+
+    <div class="step-flow">
+      <div class="step">
+        <div class="step-line">
+          <div class="step-num">•</div>
+          <div class="step-connector"></div>
+        </div>
+        <div class="step-body">
+          <h4>on_train_begin</h4>
+          <p>Fires once before the very first epoch. Your WarmupScheduler sets the initial_lr here.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-line">
+          <div class="step-num orange">•</div>
+          <div class="step-connector"></div>
+        </div>
+        <div class="step-body">
+          <h4>on_epoch_begin</h4>
+          <p>Fires at the start of every epoch, before any batches are processed. WarmupScheduler updates the LR here.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-line">
+          <div class="step-num yellow">•</div>
+          <div class="step-connector"></div>
+        </div>
+        <div class="step-body">
+          <h4>Training happens (all batches for this epoch)</h4>
+          <p>model.fit() takes full control. Callbacks sleep. The actual forward pass, backprop, optimizer — all of this happens here, invisibly to callbacks.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-line">
+          <div class="step-num green">•</div>
+        </div>
+        <div class="step-body">
+          <h4>on_epoch_end</h4>
+          <p>Fires after all batches for this epoch complete. EarlyStopping checks val_loss here. ModelCheckpoint saves here. ReduceLROnPlateau checks plateau here.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout green">
+      <p><strong>Correct framing:</strong> WarmupScheduler is a specialized LR scheduler. It changes the learning rate number. model.fit() does the training. These two never overlap — WarmupScheduler runs for a microsecond at the epoch start, then goes to sleep while model.fit() trains for the entire rest of the epoch.</p>
+    </div>
+
+    <h3>How does the callback get access to self.model?</h3>
+    <p>When you pass your callbacks list into <code>model.fit(..., callbacks=[...])</code>, Keras loops through the list and sets <code>callback.model = model</code> on each one. This is why you can write <code>self.model.optimizer.lr</code> inside your callback — Keras injected the model reference before training started.</p>
+
+    <h3>Your full callbacks list and what each one actually does</h3>
+    <table class="compare-table">
+      <tr>
+        <th>Callback</th>
+        <th>What it does</th>
+        <th>When it fires</th>
+      </tr>
+      <tr>
+        <td>WarmupScheduler</td>
+        <td>Sets LR to a small value, linearly increases each epoch until warmup_epochs</td>
+        <td>on_epoch_begin</td>
+      </tr>
+      <tr>
+        <td>ReduceLROnPlateau</td>
+        <td>Monitors val_loss. If it stops improving for 3 epochs, multiplies LR by 0.5</td>
+        <td>on_epoch_end</td>
+      </tr>
+      <tr>
+        <td>ModelCheckpoint</td>
+        <td>Saves model weights to disk when val_accuracy improves</td>
+        <td>on_epoch_end</td>
+      </tr>
+      <tr>
+        <td>EarlyStopping</td>
+        <td>Stops training if val_loss doesn't improve for 10 epochs. Restores best weights.</td>
+        <td>on_epoch_end</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- ═══════════════════════════ 13. WARMUP ═══════════════════════════ -->
+  <div class="section" id="warmup">
+    <div class="section-label">Chapter 13</div>
+    <h2>The WarmupScheduler — Line by Line</h2>
+
+    <h3>Why warmup exists</h3>
+    <p>At the very beginning of training, weights are random. If you start with a large learning rate (like 0.01), the first gradient step can be enormous — it can shatter the weight configuration before the network has any grip. Warmup starts with a tiny learning rate and slowly increases it, letting the network stabilize from random weights before applying full-speed learning.</p>
+
+    <h3>The linear interpolation formula</h3>
+    <div class="code-block">progress = (epoch + 1) / self.warmup_epochs
+lr = self.initial_lr + (self.target_lr - self.initial_lr) * progress</div>
+
+    <p>This is linear interpolation (Lerp). With initial_lr = 1e-6, target_lr = 0.01, warmup_epochs = 5:</p>
+
+    <table class="compare-table">
+      <tr>
+        <th>Epoch</th>
+        <th>progress</th>
+        <th>Arithmetic</th>
+        <th>LR Set</th>
+      </tr>
+      <tr>
+        <td>0</td>
+        <td>1/5 = 0.2</td>
+        <td>1e-6 + (0.01 - 1e-6) × 0.2</td>
+        <td>0.0020001</td>
+      </tr>
+      <tr>
+        <td>1</td>
+        <td>2/5 = 0.4</td>
+        <td>1e-6 + (0.01 - 1e-6) × 0.4</td>
+        <td>0.0040001</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>3/5 = 0.6</td>
+        <td>1e-6 + (0.01 - 1e-6) × 0.6</td>
+        <td>0.0060001</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>4/5 = 0.8</td>
+        <td>1e-6 + (0.01 - 1e-6) × 0.8</td>
+        <td>0.0080001</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td>5/5 = 1.0</td>
+        <td>1e-6 + (0.01 - 1e-6) × 1.0</td>
+        <td>0.0100000</td>
+      </tr>
+    </table>
+
+    <p>The formula is just: start + (total gap × percentage done). It scales perfectly from initial_lr to target_lr over exactly warmup_epochs epochs.</p>
+
+    <div class="callout warn">
+      <p><strong>Does training happen during warmup?</strong> Yes, absolutely. Every epoch of warmup is a full training epoch — all batches processed, all weights updated. The only thing warmup controls is the LR multiplier in the optimizer. The network is fully learning during those 5 epochs, just with a tiny step size.</p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════ 14. SET_VALUE ═══════════════════════════ -->
+  <div class="section" id="setvalue">
+    <div class="section-label">Chapter 14</div>
+    <h2>tf.keras.backend.set_value — What Exactly Gets Changed</h2>
+
+    <div class="code-block">tf.keras.backend.set_value(self.model.optimizer.lr, lr)</div>
+
+    <h3>What self.model.optimizer.lr actually is</h3>
+    <p><code>self.model.optimizer.lr</code> is not a Python float. It is a <code>tf.Variable</code> — a named container in TensorFlow's computational graph that holds a number and lives at a specific memory address (on your CPU RAM or GPU VRAM).</p>
+
+    <p>The GPU's optimizer code doesn't know about Python. It just knows: "Go to memory address X, read the learning rate from there, multiply the gradient by it." That memory address is what <code>optimizer.lr</code> points to.</p>
+
+    <h3>What set_value does</h3>
+    <p>It reaches into that memory address and overwrites the stored number with your new Python float. The entire function is a bridge between the Python world and the TensorFlow memory world.</p>
+
+    <div class="code-block"><span class="cm"># Under the hood, this is roughly what happens:</span>
+<span class="cm"># 1. Python float lr = 0.004</span>
+<span class="cm"># 2. TF converts it to a tensor</span>
+<span class="cm"># 3. Assigns it to the tf.Variable at the memory address of optimizer.lr</span>
+<span class="cm"># 4. Next GPU kernel that reads learning rate gets 0.004</span></div>
+
+    <h3>What GETS set by this line</h3>
+    <ul>
+      <li>The learning rate number stored in the optimizer's <code>lr</code> variable. That's the only thing.</li>
+    </ul>
+
+    <h3>What does NOT get set by this line</h3>
+    <ul>
+      <li><strong>Model weights</strong> — completely untouched. The network's actual learned values are unchanged.</li>
+      <li><strong>Gradients</strong> — not affected. Backprop will still compute the same gradients from the loss.</li>
+      <li><strong>Optimizer internal state</strong> — if you're using Adam, Adam has built up momentum from previous steps. That momentum is stored separately and is NOT reset by changing the lr. Adam keeps its memory; you just changed how big the next step will be.</li>
+      <li><strong>The training loop</strong> — model.fit() doesn't pause, restart, or reset. It just uses the new lr value on the very next weight update.</li>
+    </ul>
+
+    <div class="callout green">
+      <p><strong>The chain is:</strong> Python float → <code>set_value()</code> → TF Variable memory → GPU reads it → multiplies by gradient → weight updated. Your line of arithmetic becomes a physical change to the neural network's learning speed in the very next optimizer step.</p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════ 15. CONFUSION TABLE ═══════════════════════════ -->
+  <div class="section" id="confusion">
+    <div class="section-label">Chapter 15</div>
+    <h2>Master Confusion-Buster Table</h2>
+
+    <p>Every pair of concepts that look similar but are completely different:</p>
+
+    <table class="compare-table">
+      <tr>
+        <th>Concept A</th>
+        <th>Concept B</th>
+        <th>The real difference</th>
+      </tr>
+      <tr>
+        <td>Backpropagation</td>
+        <td>Optimizer</td>
+        <td>Backprop finds gradients (computes, changes nothing). Optimizer uses gradients to update weights (the actual learning).</td>
+      </tr>
+      <tr>
+        <td>Loss Function</td>
+        <td>Cost Function</td>
+        <td>Loss = error for one example. Cost = averaged error over a batch. Often used interchangeably in practice.</td>
+      </tr>
+      <tr>
+        <td>Learning Rate</td>
+        <td>Epoch</td>
+        <td>LR = how big each weight update step is. Epoch = one full pass through the dataset. They don't directly relate.</td>
+      </tr>
+      <tr>
+        <td>Callback</td>
+        <td>Training</td>
+        <td>Callback = event listener, fires briefly at hooks. Training = model.fit()'s main loop. Callbacks don't train anything.</td>
+      </tr>
+      <tr>
+        <td>Weights</td>
+        <td>Hyperparameters</td>
+        <td>Weights are learned automatically during training. Hyperparameters (LR, batch size, epochs) are set by you before training.</td>
+      </tr>
+      <tr>
+        <td>Forward Pass</td>
+        <td>Backward Pass</td>
+        <td>Forward = data flows in, prediction comes out, nothing changes. Backward = gradients flow back, nothing changes yet. Only after the optimizer step do weights change.</td>
+      </tr>
+      <tr>
+        <td>Gradient</td>
+        <td>Weight</td>
+        <td>Weight = the actual number in the network. Gradient = a temporary measurement of how sensitive the loss is to that weight. Gradients are discarded after each step.</td>
+      </tr>
+      <tr>
+        <td>Softmax</td>
+        <td>ReLU</td>
+        <td>Softmax is an output function that converts scores to probabilities (used at the final layer for classification). ReLU is a hidden-layer activation that kills negative values.</td>
+      </tr>
+      <tr>
+        <td>SGD</td>
+        <td>Adam</td>
+        <td>Both optimizers. SGD takes a raw gradient step. Adam adds momentum and per-weight adaptive learning rates. Same goal, smarter execution in Adam.</td>
+      </tr>
+      <tr>
+        <td>Batch</td>
+        <td>Epoch</td>
+        <td>A batch is a subset of the dataset (e.g., 32 images). One epoch = all batches processed once = all images seen once. Multiple batches make one epoch.</td>
+      </tr>
+    </table>
+  </div>
+
+</div>
+</body>
+</html>
