@@ -1,0 +1,1208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>C++ Learning Atlas — Input, Strings, Buffers, and Output</title>
+  <meta name="description" content="A light-themed GitHub-ready HTML guide covering C++ input buffering, getline, cin, std::endl, strings, const, auto, and edge cases." />
+  <style>
+    :root{
+      --bg: #f7f9fc;
+      --bg-soft: #ffffff;
+      --panel: #ffffff;
+      --panel-2: #f3f7ff;
+      --text: #142033;
+      --muted: #53627a;
+      --line: #dbe4f0;
+      --line-strong: #c7d4e8;
+      --brand: #4f7cff;
+      --brand-2: #7aa2ff;
+      --good: #0d8f5a;
+      --warn: #d97706;
+      --bad: #d64545;
+      --shadow: 0 10px 30px rgba(17, 24, 39, 0.08);
+      --radius-xl: 22px;
+      --radius-lg: 16px;
+      --radius-md: 12px;
+      --radius-sm: 10px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      --sans: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      --max: 1240px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body{
+      margin:0;
+      font-family: var(--sans);
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, #eef4ff 0%, transparent 24%),
+        radial-gradient(circle at top right, #f6f8ff 0%, transparent 20%),
+        linear-gradient(180deg, #f8fbff 0%, #f5f8fc 100%);
+      line-height: 1.65;
+    }
+
+    a{ color: var(--brand); text-decoration: none; }
+    a:hover{ text-decoration: underline; }
+
+    .container{
+      width: min(var(--max), calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    .topbar{
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(16px);
+      background: rgba(247, 249, 252, 0.82);
+      border-bottom: 1px solid rgba(199, 212, 232, 0.7);
+    }
+
+    .topbar-inner{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      min-height:72px;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      font-weight:800;
+      letter-spacing:-0.03em;
+    }
+
+    .brand-badge{
+      width:42px;
+      height:42px;
+      border-radius:14px;
+      background: linear-gradient(135deg, #4f7cff 0%, #8db0ff 100%);
+      display:grid;
+      place-items:center;
+      color:white;
+      font-weight:900;
+      box-shadow: 0 8px 18px rgba(79,124,255,0.28);
+    }
+
+    .nav{
+      display:flex;
+      gap:14px;
+      flex-wrap:wrap;
+    }
+
+    .nav a{
+      padding:10px 14px;
+      border-radius:999px;
+      color: var(--muted);
+      font-size: 0.95rem;
+      border:1px solid transparent;
+    }
+
+    .nav a:hover{
+      background: rgba(255,255,255,0.8);
+      border-color: var(--line);
+      text-decoration:none;
+      color: var(--text);
+    }
+
+    .hero{
+      padding: 52px 0 26px;
+    }
+
+    .hero-grid{
+      display:grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap:24px;
+      align-items:stretch;
+    }
+
+    .hero-card,
+    .info-card,
+    .card,
+    .notebook,
+    .table-wrap{
+      background: rgba(255,255,255,0.88);
+      border:1px solid rgba(199, 212, 232, 0.85);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow);
+    }
+
+    .hero-card{
+      padding: 34px;
+      overflow:hidden;
+      position:relative;
+    }
+
+    .hero-card::before{
+      content:"";
+      position:absolute;
+      inset:auto -40px -50px auto;
+      width:280px;
+      height:280px;
+      background: radial-gradient(circle, rgba(122,162,255,0.16), transparent 60%);
+      pointer-events:none;
+    }
+
+    .eyebrow{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 12px;
+      border-radius:999px;
+      background: #eef4ff;
+      border:1px solid #d8e5ff;
+      color: #3159c7;
+      font-size:0.88rem;
+      font-weight:700;
+      margin-bottom:18px;
+    }
+
+    h1, h2, h3{
+      letter-spacing:-0.03em;
+      margin:0;
+    }
+
+    h1{
+      font-size: clamp(2rem, 4vw, 3.55rem);
+      line-height:1.05;
+      margin-bottom:14px;
+    }
+
+    .lead{
+      color: var(--muted);
+      font-size:1.08rem;
+      max-width: 68ch;
+      margin: 0 0 22px;
+    }
+
+    .hero-pills{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:20px;
+    }
+
+    .pill{
+      padding:10px 14px;
+      border-radius:999px;
+      background: #fff;
+      border:1px solid var(--line);
+      color: var(--text);
+      font-size:0.93rem;
+      font-weight:600;
+    }
+
+    .hero-side{
+      display:grid;
+      gap:18px;
+    }
+
+    .info-card{
+      padding: 22px;
+    }
+
+    .info-card h3{
+      font-size:1.08rem;
+      margin-bottom:10px;
+    }
+
+    .info-card p{
+      color: var(--muted);
+      margin:0;
+      font-size:0.98rem;
+    }
+
+    .metrics{
+      display:grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap:14px;
+      margin-top:18px;
+    }
+
+    .metric{
+      padding:16px;
+      border-radius:16px;
+      background: linear-gradient(180deg, #ffffff 0%, #f7faff 100%);
+      border:1px solid var(--line);
+    }
+
+    .metric .num{
+      font-size:1.55rem;
+      font-weight:800;
+      letter-spacing:-0.04em;
+    }
+
+    .metric .label{
+      color: var(--muted);
+      font-size:0.92rem;
+      margin-top:4px;
+    }
+
+    section{
+      padding: 26px 0;
+    }
+
+    .section-title{
+      font-size: clamp(1.5rem, 2vw, 2.1rem);
+      margin-bottom: 10px;
+    }
+
+    .section-sub{
+      color: var(--muted);
+      margin: 0 0 20px;
+      max-width: 76ch;
+    }
+
+    .grid-3{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap:18px;
+    }
+
+    .grid-2{
+      display:grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap:18px;
+    }
+
+    .card{
+      padding: 22px;
+    }
+
+    .card h3{
+      font-size:1.1rem;
+      margin-bottom:10px;
+    }
+
+    .card p{
+      margin:0;
+      color: var(--muted);
+    }
+
+    .card .tag{
+      display:inline-block;
+      margin-top:16px;
+      padding:7px 10px;
+      font-size:0.82rem;
+      font-weight:700;
+      color:#3159c7;
+      background:#eef4ff;
+      border:1px solid #d8e5ff;
+      border-radius:999px;
+    }
+
+    .table-wrap{
+      overflow:auto;
+      padding: 12px;
+    }
+
+    table{
+      width:100%;
+      border-collapse:separate;
+      border-spacing:0;
+      min-width: 840px;
+      font-size:0.97rem;
+    }
+
+    th, td{
+      text-align:left;
+      padding: 16px 14px;
+      border-bottom:1px solid var(--line);
+      vertical-align:top;
+    }
+
+    thead th{
+      position: sticky;
+      top: 0;
+      background: #f3f7ff;
+      color:#22314a;
+      font-size:0.9rem;
+      text-transform:uppercase;
+      letter-spacing:0.05em;
+      z-index: 1;
+    }
+
+    tbody tr:hover td{
+      background: #fbfdff;
+    }
+
+    .status{
+      display:inline-block;
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:0.8rem;
+      font-weight:700;
+      line-height:1;
+      white-space:nowrap;
+    }
+
+    .good{ background:#e8fbf3; color: var(--good); }
+    .warn{ background:#fff5e6; color: var(--warn); }
+    .bad{ background:#ffecec; color: var(--bad); }
+    .neutral{ background:#edf2fb; color:#4b5f82; }
+
+    .code-grid{
+      display:grid;
+      gap:18px;
+    }
+
+    .notebook{
+      overflow:hidden;
+    }
+
+    .nb-top{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding: 14px 18px;
+      border-bottom:1px solid var(--line);
+      background: linear-gradient(180deg, #f8fbff 0%, #f2f7ff 100%);
+    }
+
+    .nb-title{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      font-weight:800;
+    }
+
+    .dots{
+      display:flex;
+      gap:7px;
+    }
+
+    .dot{
+      width:10px;
+      height:10px;
+      border-radius:50%;
+    }
+
+    .dot.red{ background:#ff6b6b; }
+    .dot.yellow{ background:#f7c948; }
+    .dot.green{ background:#34c759; }
+
+    .nb-body{
+      padding: 0;
+    }
+
+    .cell{
+      border-bottom:1px solid var(--line);
+    }
+
+    .cell:last-child{
+      border-bottom:none;
+    }
+
+    .cell-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      padding: 12px 18px;
+      background:#ffffff;
+    }
+
+    .cell-label{
+      font-weight:800;
+      color:#2a3c58;
+      font-size:0.93rem;
+    }
+
+    .exec-time{
+      font-size:0.84rem;
+      color: var(--muted);
+    }
+
+    pre{
+      margin:0;
+      padding: 18px;
+      overflow:auto;
+      background:#f8fbff;
+      border-top:1px solid var(--line);
+      border-bottom:1px solid var(--line);
+      font-family: var(--mono);
+      font-size:0.94rem;
+      line-height:1.6;
+      color:#19304a;
+    }
+
+    code{
+      font-family: var(--mono);
+    }
+
+    .output{
+      padding: 18px;
+      background:#ffffff;
+    }
+
+    .output-box{
+      border:1px solid var(--line);
+      background:#fcfdff;
+      border-radius: 14px;
+      padding:14px 16px;
+      font-family: var(--mono);
+      white-space:pre-wrap;
+      color:#234;
+      overflow:auto;
+    }
+
+    .analysis{
+      padding: 16px 18px 20px;
+      background:#fdfefe;
+    }
+
+    .analysis h4{
+      margin:0 0 8px;
+      font-size:0.98rem;
+    }
+
+    .analysis p{
+      margin:0;
+      color: var(--muted);
+    }
+
+    .callout{
+      border-left: 4px solid var(--brand);
+      background:#f4f8ff;
+      padding: 16px 18px;
+      border-radius: 12px;
+      color:#345;
+    }
+
+    .mini-list{
+      margin: 12px 0 0;
+      padding-left: 18px;
+      color: var(--muted);
+    }
+
+    .mini-list li + li{ margin-top:8px; }
+
+    .footer{
+      padding: 34px 0 60px;
+      color: var(--muted);
+      text-align:center;
+    }
+
+    .kbd{
+      display:inline-block;
+      padding:2px 8px;
+      border:1px solid var(--line-strong);
+      border-bottom-width:2px;
+      border-radius:8px;
+      font-family: var(--mono);
+      background:#fff;
+      font-size:0.9rem;
+      color:#31435c;
+    }
+
+    .accent{
+      color:#3159c7;
+      font-weight:700;
+    }
+
+    @media (max-width: 1060px){
+      .hero-grid, .grid-3, .grid-2{
+        grid-template-columns: 1fr;
+      }
+      .nav{ display:none; }
+    }
+
+    @media (max-width: 640px){
+      .container{ width: min(var(--max), calc(100% - 20px)); }
+      .hero-card, .info-card, .card{ padding:20px; }
+      h1{ font-size: 2.1rem; }
+      .lead{ font-size:1rem; }
+      th, td{ padding:12px 10px; }
+      pre{ font-size:0.86rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <div class="brand-badge">C++</div>
+        <div>
+          <div style="font-size:1rem;">C++ Learning Atlas</div>
+          <div style="font-size:0.84rem; color: var(--muted); font-weight:600;">Light themed • GitHub ready • Deeply explained</div>
+        </div>
+      </div>
+      <nav class="nav">
+        <a href="#map">Concept Map</a>
+        <a href="#buffer">Buffer Mystery</a>
+        <a href="#compare">Comparisons</a>
+        <a href="#notebook">Notebook Walkthrough</a>
+        <a href="#mistakes">Edge Cases</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="container hero-grid">
+        <div class="hero-card">
+          <div class="eyebrow">Why C++ feels weird before it feels powerful</div>
+          <h1>C++ Input, Strings, Buffers, and Output — explained by the <span class="accent">why</span></h1>
+          <p class="lead">
+            This page turns your scattered learning into one polished atlas: why de>cin &gt;&gt;</code> behaves differently from de>getline()</code>, why the input buffer keeps “ghost” characters, why de>std::endl</code> feels different from de>\n</code>, and where tiny mistakes become confusing bugs.
+          </p>
+          <div class="hero-pills">
+            <div class="pill">Token input vs line input</div>
+            <div class="pill">Buffer leftovers</div>
+            <div class="pill">Whitespace rules</div>
+            <div class="pill">Flush vs no flush</div>
+            <div class="pill">String indexing</div>
+            <div class="pill">Type deduction</div>
+          </div>
+        </div>
+
+        <div class="hero-side">
+          <div class="info-card">
+            <h3>Core mental model</h3>
+            <p>
+              Keyboard input first goes into a waiting area called the stream buffer. Different input functions consume that waiting data in different ways. Most beginner confusion comes from forgetting that the buffer still remembers characters you typed earlier.
+            </p>
+          </div>
+
+          <div class="info-card">
+            <h3>What this page covers</h3>
+            <div class="metrics">
+              <div class="metric">
+                <div class="num">11</div>
+                <div class="label">Concepts differentiated</div>
+              </div>
+              <div class="metric">
+                <div class="num">7</div>
+                <div class="label">Common mistakes decoded</div>
+              </div>
+              <div class="metric">
+                <div class="num">4</div>
+                <div class="label">Notebook-style code demos</div>
+              </div>
+              <div class="metric">
+                <div class="num">1</div>
+                <div class="label">GitHub-ready single file</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="map">
+      <div class="container">
+        <h2 class="section-title">Concept map</h2>
+        <p class="section-sub">
+          Before memorizing fixes, first separate the ideas. C++ usually behaves “strangely” only when two different mechanisms are mixed together and you expect them to follow the same rules.
+        </p>
+
+        <div class="grid-3">
+          <div class="card">
+            <h3>1. Reading tokens</h3>
+            <p>de>cin &gt;&gt; x</code> reads one formatted value. It skips leading whitespace, reads only what matches the target type, then stops when the next character no longer belongs to that token.</p>
+            <div class="tag">Token based</div>
+          </div>
+
+          <div class="card">
+            <h3>2. Reading lines</h3>
+            <p>de>getline(cin, s)</code> reads everything until newline. Spaces are part of the line, so this is what you use for full names, full sentences, and multi-word text.</p>
+            <div class="tag">Line based</div>
+          </div>
+
+          <div class="card">
+            <h3>3. Buffered output</h3>
+            <p>de>cout</code> may hold text briefly before showing it. de>\n</code> just means new line, while de>std::endl</code> means new line plus “flush now.”</p>
+            <div class="tag">Output timing</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="buffer">
+      <div class="container">
+        <h2 class="section-title">The input buffer mystery</h2>
+        <p class="section-sub">
+          The confusing part is not de>getline()</code> itself. The real problem is that your earlier input operation may have left a newline behind in the stream.
+        </p>
+
+        <div class="grid-2">
+          <div class="card">
+            <h3>What actually happens</h3>
+            <p>
+              Suppose you type <span class="kbd">5</span> and then press <span class="kbd">Enter</span>. The stream receives two things: the character de>'5'</code> and the newline character de>'\n'</code>. Then de>cin &gt;&gt; o</code> consumes only the number part and leaves the newline behind.
+            </p>
+            <ul class="mini-listst">
+              >de>cin &gt;&gt; o</code> reads the number.</l/li>
+              >The pressed Enter key becomes de>'\n'</code>.</li>
+              >That newline remains waiting in the stream.</li>
+            </ul>
+          </div>
+
+          <div class="card">
+            <h3>Why de>getline()</code> feels skipped</h3>
+            <p>
+              de>getline()</code> starts reading from the current stream position. If the first thing it sees is that old newline, it immediately stops and returns an empty string because, from its point of view, the line has already ended.
+            </p>
+            <ul class="mini-listst">
+              >It did not fail randomly.</l/li>
+              >It did not refuse input.</l/li>
+              >It obeyed its own rule perfectly.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="callout" style="margin-top:18px;">
+          <strong>Golden rule:</strong> when you switch from formatted extraction like de>cin &gt;&gt;</code> to line extraction like de>getline()</code>, first deal with the leftover newline or avoid mixing the two styles.
+        </div>
+      </div>
+    </section>
+
+    <section id="compare">
+      <div class="container">
+        <h2 class="section-title">Precise comparisons</h2>
+        <p class="section-sub">
+          This is the part you can screenshot, upload, or keep as a compact reference. It differentiates behavior, hidden assumptions, and the mistakes each construct invites.
+        </p>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Snippet</th>
+                <th>Main job</th>
+                <th>What it consumes</th>
+                <th>Stops when</th>
+                <th>Common mistake</th>
+                <th>Best use</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>de>cin &gt;&gt; x</code></td>
+                <td>Formatted extraction</td>
+                <td>One token of the target type</td>
+                <td>Whitespace or invalid next char</td>
+                <td>Assuming it reads full lines</td>
+                <td>Numbers, single words, simple tokens</td>
+              </tr>
+              <tr>
+                <td>de>getline(cin, s)</code></td>
+                <td>Line extraction</td>
+                <td>Everything until newline</td>
+                <td>Newline</td>
+                <td>Using it right after de>cin &gt;&gt;</code> without cleanup</td>
+                <td>Names, addresses, sentences</td>
+              </tr>
+              <tr>
+                <td>de>cin.ignore(1000, '\n')</code></td>
+                <td>Cleanup</td>
+                <td>Characters already in the stream</td>
+                <td>After 1000 chars or newline</td>
+                <td>Treating 1000 as magic rather than a cap</td>
+                <td>Remove leftover input before de>getline()</code></td>
+              </tr>
+              <tr>
+                <td>de>getline(cin &gt;&gt; ws, s)</code></td>
+                <td>Whitespace skipping + line read</td>
+                <td>Skips leading whitespace, then reads line</td>
+                <td>Newline</td>
+                <td>Using it when leading spaces are intentionally meaningful</td>
+                <td>Quick clean fix after de>cin &gt;&gt;</code></td>
+              </tr>
+              <tr>
+                <td>de>\n</code></td>
+                <td>New line character</td>
+                <td>Only inserts line break into output</td>
+                <td>Immediately after insertion</td>
+                <td>Expecting it to force display instantly</td>
+                <td>Default fast output</td>
+              </tr>
+              <tr>
+                <td>de>std::endl</code></td>
+                <td>New line + flush</td>
+                <td>Line break and buffer flush</td>
+                <td>After flush completes</td>
+                <td>Using it everywhere and slowing output</td>
+                <td>Debugging or forced real-time visibility</td>
+              </tr>
+              <tr>
+                <td>de>stoi(s)</code></td>
+                <td>String-to-int conversion</td>
+                <td>A string you already captured</td>
+                <td>On parse completion or invalid format</td>
+                <td>Not handling invalid input</td>
+                <td>Line-based safe input workflows</td>
+              </tr>
+              <tr>
+                <td>de>const int x</code></td>
+                <td>Prevent reassignment</td>
+                <td>A value fixed after initialization</td>
+                <td>Compile-time reassignment error</td>
+                <td>Thinking it means the whole object is always deeply immutable</td>
+                <td>Constants, intent, safety</td>
+              </tr>
+              <tr>
+                <td>de>auto x = 10</code></td>
+                <td>Type deduction</td>
+                <td>Initializer expression</td>
+                <td>After type is deduced</td>
+                <td>Forgetting the inferred type may differ from what you assumed</td>
+                <td>Cleaner declarations when type is obvious</td>
+              </tr>
+              <tr>
+                <td>de>s.size()</code></td>
+                <td>Length query</td>
+                <td>String metadata</td>
+                <td>Returns count</td>
+                <td>Forgetting spaces count as characters</td>
+                <td>Looping and bounds checks</td>
+              </tr>
+              <tr>
+                <td>de>s[i]</code></td>
+                <td>Character access</td>
+                <td>One character at index de>i</code></td>
+                <td>Access attempt</td>
+                <td>Using invalid index and causing undefined behavior</td>
+                <td>Fast direct character access</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="table-wrap" style="margin-top:18px;">
+          <table>
+            <thead>
+              <tr>
+                <th>Situation</th>
+                <th>What beginner expects</th>
+                <th>What C++ actually does</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>de>cin &gt;&gt; num;</code> then de>getline(cin, name);</code></td>
+                <td>The second input waits for the name</td>
+                <td>de>getline()</code> may instantly read the leftover newline and return an empty string</td>
+                <td><span class="status bad">Classic trap</span></td>
+              </tr>
+              <tr>
+                <td>Typing letters for an de>int</code></td>
+                <td>The variable becomes 0 automatically</td>
+                <td>The stream enters fail state and future reads may stop working until cleared</td>
+                <td><span class="status warn">Needs error handling</span></td>
+              </tr>
+              <tr>
+                <td>Using de>\n</code> during debugging</td>
+                <td>Output appears immediately</td>
+                <td>Output may stay buffered</td>
+                <td><span class="status neutral">Environment dependent</span></td>
+              </tr>
+              <tr>
+                <td>Using de>std::endl</code> everywhere</td>
+                <td>Always better</td>
+                <td>It can be slower because it flushes each time</td>
+                <td><span class="status warn">Use intentionally</span></td>
+              </tr>
+              <tr>
+                <td>Accessing de>s[100]</code> in a short string</td>
+                <td>Nice clean error</td>
+                <td>Undefined behavior, which can look random</td>
+                <td><span class="status bad">Danger zone</span></td>
+              </tr>
+              <tr>
+                <td>de>getline(cin &gt;&gt; ws, s)</code> with leading spaces that matter</td>
+                <td>Exact text preserved</td>
+                <td>Leading whitespace gets consumed first</td>
+                <td><span class="status warn">Use carefully</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="notebook">
+      <div class="container">
+        <h2 class="section-title">Jupyter-style walkthrough</h2>
+        <p class="section-sub">
+          These cells are styled like notebook output. Each one includes the code, what would appear on the screen, and the actual reason that behavior happens.
+        </p>
+
+        <div class="code-grid">
+
+          <div class="notebook">
+            <div class="nb-top">
+              <div class="nb-title">
+                <div class="dots">
+                  <span class="dot red"></span>
+                  <span class="dot yellow"></span>
+                  <span class="dot green"></span>
+                </div>
+                Notebook Cell 1 — Why de>getline()</code> seems broken
+              </div>
+              <div class="exec-time">Kernel: C++17</div>
+            </div>
+            <div class="nb-body">
+              <div class="cell">
+                <div class="cell-head">
+                  <div class="cell-label">In [1]</div>
+                  <div class="exec-time">Run time: 0.01s</div>
+                </div>
+                <pre>de>#include &lt;iostream&gt;
+#include &lt;string&gt;
+using namespace std;
+
+int main() {
+    int o;
+    cout &lt;&lt; "Type in the number: ";
+    cin &gt;&gt; o;
+
+    string fullName;
+    cout &lt;&lt; "Type your full name: ";
+    getline(cin, fullName);
+
+    cout &lt;&lt; "Your full name is: " &lt;&lt; fullName &lt;&lt; endl;
+}</code></pre>
+              </div>
+              <div class="cell">
+                <div class="cell-head">
+                  <div class="cell-label">Out [1]</div>
+                </div>
+                <div class="output">
+                  <div class="output-box">Type in the number: 5
+Type your full name: Your full name is:</div>
+                </div>
+              </div>
+              <div class="analysis">
+                <h4>Analysis</h4>
+                <p>
+                  After you type de>5</code> and press Enter, the stream contains the number plus a newline. de>cin &gt;&gt; o</code> reads the number, but the Enter key remains as de>'\n'</code>. Then de>getline()</code> sees that newline immediately and thinks the line is already over.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="notebook">
+            <div class="nb-top">
+              <div class="nb-title">
+                <div class="dots">
+                  <span class="dot red"></span>
+                  <span class="dot yellow"></span>
+                  <span class="dot green"></span>
+                </div>
+                Notebook Cell 2 — Fix with de>cin.ignore()</code>
+              </div>
+              <div class="exec-time">Kernel: C++17</div>
+            </div>
+            <div class="nb-body">
+              <div class="cell">
+                <div class="cell-head">
+                  <div class="cell-label">In [2]</div>
+                  <div class="exec-time">Run time: 0.01s</div>
+                </div>
+                <pre>de>#include &lt;iostream&gt;
+#include &lt;string&gt;
+using namespace std;
+
+int main() {
+    int o;
+    cout &lt;&lt; "Type in the number: ";
+    cin &gt;&gt; o;
+
+    cin.ignore(1000, '\n');
+
+    string fullName;
+    cout &lt;&lt; "Type your full name: ";
+    getline(cin, fullName);
+
+    cout &lt;&lt; "Your full name is: " &lt;&lt; fullName &lt;&lt; endl;
+}</code></pre>
+              </div>
+              <div class="cell">
+                <div class="cell-head">
+                  <div class="cell-label">Out [2]</div>
+                </div>
+                <div class="output">
+                  <div class="output-box">Type in the number: 5
+Type your full name: Ada Lovelace
+Your full name is: Ada Lovelace</div>
+                </div>
+              </div>
+              <div class="analysis">
+                <h4>Analysis</h4>
+                <p>
+                  de>cin.ignore(1000, '\n')</code> throws away characters already waiting in the stream until it reaches a newline or hits the limit. The de>1000</code> is just a maximum count, not a mystical value. It means “skip up to 1000 characters while looking for the end of the line.”
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="notebook">
+            <div class="nb-top">
+              <div class="nb-title">
+                <div class="dots">
+                  <span class="dot red"></span>
+                  <span class="dot yellow"></span>
+                  <span class="dot green"></span>
+                </div>
+                Notebook Cell 3 — Cleaner fix with de>ws</code>
+              </div>
+              <div class="exec-time">Kernel: C++17</div>
+            </div>
+            <div class="nb-body">
+              <div class="cell">
+                <div class="cell-head">
+                  <div class="cell-label">In [3]</div>
+                  <div class="exec-time">Run time: 0.01s</div>
+                </div>
+                <pre>de>#include &lt;iostream&gt;
+#include &lt;string&gt;
+using namespace std;
+
+int main() {
+    int o;
+    cout &lt;&lt; "Type in the number: ";
+    cin &gt;&gt; o;
+
+    string fullName;
+    cout &lt;&lt; "Type your full name: ";
+    getline(cin &gt;&gt; ws, fullName);
+
+    cout &lt;&lt; "Your full name is: " &lt;&lt; fullName &lt;&lt; '\n';
+}</code></pre>
+              </div>
+              <div class="cell">
+                <div class="cell-head">
+                  <div class="cell-label">Out [3]</div>
+                </div>
+                <div class="output">
+                  <div class="output-box">Type in the number: 5
+Type your full name: Alan Turing
+Your full name is: Alan Turing</div>
+                </div>
+              </div>
+              <div class="analysis">
+                <h4>Analysis</h4>
+                <p>
+                  de>ws</code> means “eat leading whitespace first.” That includes spaces, tabs, and newlines. So this version works neatly after de>cin &gt;&gt;</code>, but it is not ideal when leading spaces are meaningful data you wanted to preserve.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="notebook">
+            <div class="nb-top">
+              <div class="nb-title">
+                <div class="dots">
+                  <span class="dot red"></span>
+                  <span class="dot yellow"></span>
+                  <span class="dot green"></span>
+                </div>
+                Notebook Cell 4 — Professional pattern: read strings first
+              </div>
+              <div class="exec-time">Kernel: C++17</div>
+            </div>
+            <div class="nb-body">
+              <div class="cell">
+                <div class="cell-head">
+                  <div class="cell-label">In [4]</div>
+                  <div class="exec-time">Run time: 0.02s</div>
+                </div>
+                <pre>de>#include &lt;iostream&gt;
+#include &lt;string&gt;
+using namespace std;
+
+int main() {
+    string temp;
+    cout &lt;&lt; "Type in the number: ";
+    getline(cin, temp);
+
+    int o = stoi(temp);
+
+    string fullName;
+    cout &lt;&lt; "Type your full name: ";
+    getline(cin, fullName);
+
+    cout &lt;&lt; "The number is: " &lt;&lt; o &lt;&lt; '\n';
+    cout &lt;&lt; "Your full name is: " &lt;&lt; fullName &lt;&lt; '\n';
+}</code></pre>
+              </div>
+              <div class="cell">
+                <div class="cell-head">
+                  <div class="cell-label">Out [4]</div>
+                </div>
+                <div class="output">
+                  <div class="output-box">Type in the number: 42
+Type your full name: Grace Hopper
+The number is: 42
+Your full name is: Grace Hopper</div>
+                </div>
+              </div>
+              <div class="analysis">
+                <h4>Analysis</h4>
+                <p>
+                  This avoids mixing token-based and line-based input. The trade-off is that conversion functions like de>stoi()</code> can throw exceptions when the text is invalid, so this pattern becomes strongest when you also validate and handle bad input.
+                </p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <section id="mistakes">
+      <div class="container">
+        <h2 class="section-title">Small mistakes that create big confusion</h2>
+        <p class="section-sub">
+          Most beginner bugs here are not about syntax. They come from mental model mismatches: expecting one construct to behave like another even though they solve different problems.
+        </p>
+
+        <div class="grid-2">
+          <div class="card">
+            <h3>Input mistakes</h3>
+            <div class="table-wrap" style="padding:0; border:none; box-shadow:none; background:transparent;">
+              <table style="min-width:100%;">
+                <thead>
+                  <tr>
+                    <th>Mistake</th>
+                    <th>Why it happens</th>
+                    <th>Fix</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Thinking de>cin &gt;&gt;</code> reads a sentence</td>
+                    <td>It reads one token, not a full line</td>
+                    <td>Use de>getline()</code></td>
+                  </tr>
+                  <tr>
+                    <td>Assuming Enter disappears automatically</td>
+                    <td>The newline is still a character in the stream</td>
+                    <td>Use de>ignore</code>, de>ws</code>, or all-de>getline()</code></td>
+                  </tr>
+                  <tr>
+                    <td>Believing invalid integer input becomes 0</td>
+                    <td>Extraction can fail and set stream fail state</td>
+                    <td>Check de>cin.fail()</code>, then clear and discard bad input</td>
+                  </tr>
+                  <tr>
+                    <td>Using de>ws</code> blindly</td>
+                    <td>It removes leading whitespace before the line</td>
+                    <td>Use only when leading spaces should be ignored</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>Strings and output mistakes</h3>
+            <div class="table-wrap" style="padding:0; border:none; box-shadow:none; background:transparent;">
+              <table style="min-width:100%;">
+                <thead>
+                  <tr>
+                    <th>Mistake</th>
+                    <th>Why it happens</th>
+                    <th>Fix</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Forgetting spaces count in strings</td>
+                    <td>de>size()</code> counts every character, including spaces</td>
+                    <td>Inspect indices carefully</td>
+                  </tr>
+                  <tr>
+                    <td>Using invalid string index</td>
+                    <td>de>[]</code> does not perform bounds checking</td>
+                    <td>Check range or use de>at()</code> when safety matters</td>
+                  </tr>
+                  <tr>
+                    <td>Using de>std::endl</code> as default</td>
+                    <td>It flushes every time, which can be unnecessary</td>
+                    <td>Prefer de>\n</code> unless immediate flush is needed</td>
+                  </tr>
+                  <tr>
+                    <td>Thinking de>const</code> means “absolutely unchangeable in every way”</td>
+                    <td>It mainly prevents reassignment through that declaration</td>
+                    <td>Understand what exactly is const-qualified</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid-3" style="margin-top:18px;">
+          <div class="card">
+            <h3>de>a = b = c = 50;</code></h3>
+            <p>
+              This is assignment, not redeclaration. It is legal if de>a</code>, de>b</code>, and de>c</code> were already declared.
+            </p>
+            <div class="tag">Valid</div>
+          </div>
+
+          <div class="card">
+            <h3>de>auto t = 10;</code></h3>
+            <p>
+              The compiler deduces the type from the initializer. It improves readability when the type is obvious, but can hide detail when the type is subtle.
+            </p>
+            <div class="tag">Useful, not magical</div>
+          </div>
+
+          <div class="card">
+            <h3>de>MyString[5]</code></h3>
+            <p>
+              This gives direct indexed access into a string. It is fast, but it trusts you completely, which is why out-of-range access becomes dangerous.
+            </p>
+            <div class="tag">Fast, risky</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="container">
+        <h2 class="section-title">Best practices to keep</h2>
+        <p class="section-sub">
+          These are the habits that stop the confusion before it starts.
+        </p>
+
+        <div class="grid-3">
+          <div class="card">
+            <h3>Use one input style consistently</h3>
+            <p>
+              For simple beginner programs, either stay mostly with de>cin &gt;&gt;</code> for tokens or mostly with de>getline()</code> for lines. Mixing is fine, but only when you understand the leftover newline problem.
+            </p>
+          </div>
+          <div class="card">
+            <h3>Prefer de>\n</code> for normal output</h3>
+            <p>
+              Save de>std::endl</code> for moments when flushing really matters, such as debugging, progress visibility, or interactive output that must appear instantly.
+            </p>
+          </div>
+          <div class="card">
+            <h3>Validate input aggressively</h3>
+            <p>
+              If a user types text into a numeric input path, extraction can fail. Robust code checks stream state, clears errors, and discards bad leftovers before trying again.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    Built as a single, light-themed C++ learning page for GitHub upload • Save this file as de>index.html</code> and open it locally or publish it with GitHub Pages.
+  </footer>
+
+</body>
+</html>w 
